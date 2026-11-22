@@ -1,0 +1,1975 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JoyShot Jungle — Petualangan Rimba Ceria: Misi Biotik & Abiotik</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+            background: radial-gradient(circle at 50% 18%, #A5E8FF 0%, #E8F5E9 58%, #81C784 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            color: #1B5E20;
+            cursor: crosshair;
+        }
+
+        .bg-decor {
+            position: fixed;
+            font-size: 3.6rem;
+            opacity: 0.5;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .game-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1020px;
+            background: rgba(255, 255, 255, 0.96);
+            border: 6px solid #2E7D32;
+            border-radius: 30px;
+            padding: 24px 24px 135px 24px;
+            box-shadow: 0 14px 0 #1B5E20, 0 24px 40px rgba(0, 0, 0, 0.24);
+            text-align: center;
+        }
+
+        .top-bar-controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .offline-badge {
+            background: #E8F5E9;
+            color: #2E7D32;
+            border: 2px solid #81C784;
+            border-radius: 20px;
+            padding: 5px 14px;
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        .btn-music {
+            background: #FFF8E1;
+            color: #E65100;
+            border: 3px solid #FFB300;
+            border-radius: 25px;
+            padding: 7px 15px;
+            font-family: inherit;
+            font-size: 0.96rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #FF8F00;
+            transition: transform 0.1s;
+        }
+
+        .btn-music:active {
+            transform: translateY(2px);
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .badge-kelas {
+            background: #FFCA28;
+            color: #3E2723;
+            padding: 8px 24px;
+            border-radius: 50px;
+            font-size: 1.12rem;
+            font-weight: 900;
+            border: 3px solid #FF8F00;
+            line-height: 1.3;
+            letter-spacing: 0.4px;
+        }
+
+        h1 {
+            font-size: 2.05rem;
+            color: #1B5E20;
+            line-height: 1.25;
+            text-shadow: 2px 2px 0 #C8E6C9;
+        }
+
+        .name-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 440px;
+            margin-top: 2px;
+        }
+
+        .name-label {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #1B5E20;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-family: inherit;
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-align: center;
+            color: #1A237E;
+            background: #F1F8E9;
+            border: 4px solid #4CAF50;
+            border-radius: 20px;
+            outline: none;
+            cursor: text;
+        }
+
+        .name-input:focus {
+            border-color: #FF6F00;
+            background: #FFFDE7;
+        }
+
+        .error-msg {
+            color: #C62828;
+            font-weight: 900;
+            font-size: 1rem;
+            min-height: 22px;
+        }
+
+        .panduan-box {
+            background: #FFF9C4;
+            border: 4px dashed #FBC02D;
+            border-radius: 20px;
+            padding: 18px 22px;
+            text-align: left;
+            font-size: 1.05rem;
+            line-height: 1.65;
+            color: #212121;
+            max-width: 820px;
+            width: 100%;
+        }
+
+        .panduan-main-heading {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #1B5E20;
+            margin-bottom: 6px;
+        }
+
+        .panduan-section-title {
+            font-size: 1.08rem;
+            font-weight: 900;
+            color: #0D47A1;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        .panduan-list {
+            list-style: none;
+            padding-left: 4px;
+        }
+
+        .panduan-list li {
+            margin-bottom: 4px;
+        }
+
+        .btn-main {
+            background: #FF6F00;
+            color: #FFFFFF;
+            font-family: inherit;
+            font-size: 1.45rem;
+            font-weight: 900;
+            padding: 14px 36px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 7px 0 #E65100;
+            transition: transform 0.1s;
+        }
+
+        .btn-main:hover {
+            background: #FF8F00;
+            transform: scale(1.03);
+        }
+
+        .btn-main:active {
+            transform: translateY(4px);
+            box-shadow: 0 3px 0 #E65100;
+        }
+
+        .btn-cam {
+            background: #0277BD;
+            color: #FFFFFF;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 900;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #01579B;
+        }
+
+        .hud {
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            background: #E8F5E9;
+            padding: 12px 18px;
+            border-radius: 20px;
+            border: 3px solid #81C784;
+            font-size: 1.12rem;
+            font-weight: 900;
+        }
+
+        .babak-pill {
+            background: #2E7D32;
+            color: #FFFFFF;
+            padding: 5px 14px;
+            border-radius: 14px;
+            font-size: 0.98rem;
+        }
+
+        .timer-box {
+            background: #FFF3E0;
+            color: #E65100;
+            padding: 6px 16px;
+            border-radius: 15px;
+            border: 3px solid #FFB74D;
+        }
+
+        .question-area {
+            width: 100%;
+            padding: 18px;
+            background: #F1F8E9;
+            border-radius: 25px;
+            border: 4px solid #AED581;
+        }
+
+        .helper-line {
+            font-size: 1.12rem;
+            font-weight: 800;
+            color: #2E7D32;
+            margin-bottom: 10px;
+        }
+
+        .visual-card {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: #FFFFFF;
+            padding: 16px 34px;
+            border-radius: 24px;
+            border: 4px solid #4CAF50;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+            max-width: 100%;
+        }
+
+        .visual-scene {
+            font-size: 5.2rem;
+            line-height: 1.15;
+            letter-spacing: 6px;
+        }
+
+        .visual-caption {
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: #111111;
+            margin-top: 6px;
+        }
+
+        .case-text {
+            font-size: 1.32rem;
+            font-weight: 900;
+            color: #1A237E;
+            margin-top: 10px;
+            max-width: 760px;
+            line-height: 1.42;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Papan Teks Jawaban 3D */
+        .options-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            margin-top: 8px;
+            perspective: 900px;
+        }
+
+        .options-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            width: 100%;
+            margin-top: 8px;
+            perspective: 900px;
+        }
+
+        .target-slot {
+            position: relative;
+            min-height: 132px;
+            border-radius: 24px;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+        }
+
+        .option-board {
+            position: relative;
+            width: 100%;
+            padding: 24px 16px;
+            border-radius: 24px;
+            cursor: pointer;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .opt-biotik {
+            background: linear-gradient(180deg, #2E7D32 0%, #1B5E20 100%);
+            color: #FFFFFF;
+            border: 5px solid #66BB6A;
+            box-shadow: 0 9px 0 #0D3B12, 0 14px 24px rgba(13, 59, 18, 0.35);
+        }
+
+        .opt-abiotik {
+            background: linear-gradient(180deg, #1565C0 0%, #0D47A1 100%);
+            color: #FFFFFF;
+            border: 5px solid #64B5F6;
+            box-shadow: 0 9px 0 #07285C, 0 14px 24px rgba(7, 40, 92, 0.35);
+        }
+
+        .opt-case {
+            background: linear-gradient(180deg, #1976D2 0%, #0D47A1 100%);
+            color: #FFFFFF;
+            border: 5px solid #90CAF9;
+            box-shadow: 0 9px 0 #07285C, 0 14px 24px rgba(7, 40, 92, 0.35);
+        }
+
+        .option-board.locked-on {
+            transform: translateY(-4px) scale(1.035);
+            outline: 5px solid #FFD600;
+            filter: brightness(1.08);
+        }
+
+        .option-board.shatter-hit {
+            animation: boardShatter 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            pointer-events: none;
+        }
+
+        @keyframes boardShatter {
+            0% {
+                transform: scale(1.04) rotate(0deg);
+                opacity: 1;
+            }
+            35% {
+                transform: scale(1.1) rotate(-3deg);
+                filter: brightness(1.5);
+            }
+            100% {
+                transform: scale(0.72) rotate(7deg);
+                opacity: 0;
+            }
+        }
+
+        .board-rivet {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #CFD8DC;
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.45), 0 1px 1px rgba(255, 255, 255, 0.6);
+        }
+        .rivet-tl { top: 10px; left: 12px; }
+        .rivet-tr { top: 10px; right: 12px; }
+        .rivet-bl { bottom: 12px; left: 12px; }
+        .rivet-br { bottom: 12px; right: 12px; }
+
+        .opt-title {
+            font-size: 1.95rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 0 3px 4px rgba(0, 0, 0, 0.35);
+        }
+
+        .opt-sub {
+            font-size: 1.02rem;
+            color: #FFF59D;
+            margin-top: 4px;
+            font-weight: 800;
+        }
+
+        /* Pecahan Kotak Jawaban (3D Shard Particles) */
+        .shard-piece {
+            position: fixed;
+            pointer-events: none;
+            z-index: 85;
+            border-radius: 6px;
+            border: 2px solid rgba(255, 255, 255, 0.75);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.35);
+            animation: shardFly 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes shardFly {
+            0% {
+                transform: translate(-50%, -50%) translate(0px, 0px) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.35);
+                opacity: 0;
+            }
+        }
+
+        /* Canvas Efek Tembakan 3D */
+        #fxCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 90;
+        }
+
+        /* Bidikan (Crosshair / Reticle) */
+        #aimReticle {
+            position: fixed;
+            width: 66px;
+            height: 66px;
+            pointer-events: none;
+            z-index: 95;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .reticle-ring {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #FF1744;
+            border-radius: 50%;
+            box-shadow: 0 0 12px rgba(255, 23, 68, 0.7), inset 0 0 10px rgba(255, 214, 0, 0.5);
+            position: relative;
+            transition: transform 0.12s ease, border-color 0.12s ease;
+        }
+
+        #aimReticle.on-target .reticle-ring {
+            transform: scale(1.18);
+            border-color: #FFD600;
+            box-shadow: 0 0 18px rgba(255, 214, 0, 0.95);
+        }
+
+        .reticle-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 10px;
+            height: 10px;
+            background: #FFD600;
+            border: 2px solid #D50000;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .reticle-tick {
+            position: absolute;
+            background: #FF1744;
+        }
+        .tick-top { top: -6px; left: 50%; width: 3px; height: 12px; transform: translateX(-50%); }
+        .tick-bot { bottom: -6px; left: 50%; width: 3px; height: 12px; transform: translateX(-50%); }
+        .tick-left { left: -6px; top: 50%; width: 12px; height: 3px; transform: translateY(-50%); }
+        .tick-right { right: -6px; top: 50%; width: 12px; height: 3px; transform: translateY(-50%); }
+
+        /* Pistol 3D di Bawah Tengah Layar */
+        #gunRig {
+            position: fixed;
+            bottom: -14px;
+            left: 50%;
+            width: 250px;
+            height: 175px;
+            pointer-events: none;
+            z-index: 92;
+            transform: translateX(-50%) rotate(0deg);
+            transform-origin: 50% 85%;
+            transition: transform 0.07s ease-out;
+            filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.42));
+        }
+
+        #gunRig.recoil {
+            transform: translateX(calc(-50% + var(--gun-offset-x, 0px))) translateY(18px) rotate(calc(var(--gun-angle, 0deg) - 11deg)) scale(1.04);
+        }
+
+        .gun-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Umpan Balik */
+        .feedback-banner {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.85);
+            background: #FFFFFF;
+            border: 8px solid #FFCA28;
+            border-radius: 30px;
+            padding: 24px 36px;
+            z-index: 105;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+            display: none;
+            max-width: 90%;
+        }
+
+        .feedback-banner.show {
+            display: block;
+            animation: popIn 0.25s forwards;
+        }
+
+        @keyframes popIn {
+            to { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        /* Layar Akhir & Leaderboard */
+        .stats-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 18px;
+            width: 100%;
+        }
+
+        .stat-box {
+            background: #FFF3E0;
+            border: 4px solid #FFB74D;
+            border-radius: 22px;
+            padding: 14px 28px;
+            min-width: 180px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #5D4037;
+        }
+
+        .stat-val {
+            font-size: 2.3rem;
+            font-weight: 900;
+            color: #E65100;
+        }
+
+        .leaderboard-box {
+            width: 100%;
+            max-width: 780px;
+            background: #F1F8E9;
+            border: 4px solid #81C784;
+            border-radius: 22px;
+            padding: 16px;
+            text-align: left;
+        }
+
+        .leaderboard-title {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: #1B5E20;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #FFFFFF;
+            border-radius: 14px;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+
+        th, td {
+            padding: 10px 12px;
+            border-bottom: 2px solid #E8F5E9;
+            text-align: center;
+        }
+
+        th {
+            background: #2E7D32;
+            color: #FFFFFF;
+            font-weight: 900;
+        }
+
+        tr.highlight-row {
+            background: #FFF9C4;
+            font-weight: 900;
+        }
+
+        /* Widget Kamera Tangan / Wajah */
+        .camera-widget {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            z-index: 96;
+            background: #263238;
+            color: #FFFFFF;
+            padding: 10px;
+            border-radius: 18px;
+            border: 3px solid #FFD600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+            cursor: default;
+        }
+
+        #webcam {
+            width: 144px;
+            height: 108px;
+            border-radius: 10px;
+            transform: scaleX(-1);
+            background: #000;
+            object-fit: cover;
+            display: none;
+        }
+
+        #camStatus {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #FFF59D;
+            max-width: 180px;
+            text-align: center;
+        }
+
+        .cam-btn-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        @media (max-width: 760px) {
+            .options-grid-2, .options-grid-3 { grid-template-columns: 1fr; }
+            h1 { font-size: 1.65rem; }
+            .visual-scene { font-size: 4rem; }
+            .visual-caption { font-size: 1.4rem; }
+            #gunRig { width: 190px; height: 135px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="fxCanvas"></canvas>
+
+    <div class="bg-decor" style="top: 4%; left: 4%;">☁️</div>
+    <div class="bg-decor" style="top: 6%; right: 6%;">☀️</div>
+    <div class="bg-decor" style="bottom: 16%; left: 3%;">🌳</div>
+
+    <div id="aimReticle">
+        <div class="reticle-ring">
+            <div class="reticle-dot"></div>
+            <div class="reticle-tick tick-top"></div>
+            <div class="reticle-tick tick-bot"></div>
+            <div class="reticle-tick tick-left"></div>
+            <div class="reticle-tick tick-right"></div>
+        </div>
+    </div>
+
+    <!-- Pistol 3D Rimba -->
+    <div id="gunRig" style="display: none;">
+        <svg class="gun-svg" viewBox="0 0 260 180" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="metalBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#607D8B"/>
+                    <stop offset="45%" stop-color="#263238"/>
+                    <stop offset="100%" stop-color="#102027"/>
+                </linearGradient>
+                <linearGradient id="barrelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#B0BEC5"/>
+                    <stop offset="50%" stop-color="#455A64"/>
+                    <stop offset="100%" stop-color="#1C2833"/>
+                </linearGradient>
+                <linearGradient id="gripGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#FF8F00"/>
+                    <stop offset="60%" stop-color="#E65100"/>
+                    <stop offset="100%" stop-color="#BF360C"/>
+                </linearGradient>
+                <radialGradient id="muzzleGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stop-color="#FFFFFF"/>
+                    <stop offset="35%" stop-color="#FFEE58"/>
+                    <stop offset="70%" stop-color="#FF6D00"/>
+                    <stop offset="100%" stop-color="rgba(255,61,0,0)"/>
+                </radialGradient>
+            </defs>
+
+            <ellipse cx="130" cy="162" rx="56" ry="12" fill="rgba(0,0,0,0.28)"/>
+
+            <path d="M112 96 L148 96 L158 156 Q130 166 102 156 Z" fill="url(#gripGrad)" stroke="#4E342E" stroke-width="3"/>
+            <line x1="115" y1="114" x2="145" y2="114" stroke="#5D4037" stroke-width="2.5" opacity="0.65"/>
+            <line x1="113" y1="128" x2="147" y2="128" stroke="#5D4037" stroke-width="2.5" opacity="0.65"/>
+            <line x1="111" y1="142" x2="149" y2="142" stroke="#5D4037" stroke-width="2.5" opacity="0.65"/>
+
+            <path d="M116 96 Q130 122 144 96" fill="none" stroke="#37474F" stroke-width="4"/>
+            <path d="M128 94 L132 108" stroke="#FFD600" stroke-width="4" stroke-linecap="round"/>
+
+            <rect x="98" y="54" width="64" height="44" rx="8" fill="url(#metalBody)" stroke="#111" stroke-width="3"/>
+            <rect x="108" y="62" width="44" height="10" rx="4" fill="#00E676" opacity="0.85"/>
+
+            <rect x="114" y="14" width="32" height="44" rx="6" fill="url(#barrelGrad)" stroke="#111" stroke-width="3"/>
+            <ellipse cx="130" cy="15" rx="13" ry="5" fill="#0A0F14" stroke="#90A4AE" stroke-width="2"/>
+
+            <rect x="126" y="4" width="8" height="12" rx="2" fill="#FF3D00"/>
+
+            <g id="muzzleFlashGroup" opacity="0">
+                <circle cx="130" cy="10" r="36" fill="url(#muzzleGlow)"/>
+                <polygon points="130,-26 138,-2 164,-12 144,6 168,20 138,16 130,36 122,16 92,20 116,6 96,-12 122,-2" fill="#FFD600"/>
+            </g>
+        </svg>
+    </div>
+
+    <div id="feedbackBanner" class="feedback-banner">
+        <div id="fbIcon" style="font-size: 3.8rem;">🎉</div>
+        <h2 id="fbTitle" style="font-size: 1.9rem; margin: 6px 0;">Hebat!</h2>
+        <p id="fbReason" style="font-size: 1.2rem; color: #222; font-weight: 800;"></p>
+    </div>
+
+    <div class="game-container">
+        <div class="top-bar-controls">
+            <span class="offline-badge">✅ Offline &amp; Kamera Siap</span>
+            <button id="btnMusicToggle" class="btn-music" onclick="toggleMusic()">🎵 Musik: ON</button>
+        </div>
+
+        <!-- LAYAR 1: AWAL & INPUT NAMA -->
+        <div id="startScreen" class="screen active">
+            <span class="badge-kelas">JoyShot Jungle</span>
+            <h1>🐢 PETUALANGAN RIMBA CERIA: MISI BIOTIK &amp; ABIOTIK ☀️</h1>
+
+            <div class="name-form">
+                <label for="studentNameInput" class="name-label">✏️ Masukkan Nama Siswa:</label>
+                <input
+                    type="text"
+                    id="studentNameInput"
+                    class="name-input"
+                    placeholder="Ketik namamu di sini..."
+                    maxlength="30"
+                    onkeydown="if(event.key==='Enter') validateAndStart()"
+                >
+                <div id="nameError" class="error-msg"></div>
+            </div>
+
+            <div class="panduan-box">
+                <div class="panduan-main-heading">🎮 Cara Bermain:</div>
+                <div class="panduan-section-title">Alur Babak &amp; Waktu: Ada 2 babak (total 10 soal):</div>
+                <ul class="panduan-list">
+                    <li>🌿 <b>Babak 1 (Soal 1–5 • 15 detik/soal):</b> Tembak papan <b>BIOTIK</b> atau <b>ABIOTIK</b>.</li>
+                    <li>🌳 <b>Babak 2 (Soal 6–10 • 20 detik/soal):</b> Tembak pilihan komponen ekosistem yang paling tepat.</li>
+                </ul>
+
+                <div class="panduan-section-title">Pilih Cara Membidik &amp; Menembak:</div>
+                <ul class="panduan-list">
+                    <li>🙂 <b>Kamera Wajah:</b> Gerakkan posisi kepala untuk membidik, lalu <b>buka mulut</b> untuk menembak.</li>
+                    <li>🖐️ <b>Kamera Tangan:</b> Arahkan telapak tangan untuk membidik, lalu buat isyarat <b>menunjuk 🫵🏻</b> untuk menembak.</li>
+                    <li>🖱️📱 <b>Mouse / Layar Sentuh:</b> Geser mouse atau geser layar untuk mengarahkan pistol, lalu <b>klik</b> untuk menembak.</li>
+                </ul>
+            </div>
+
+            <button class="btn-main" onclick="validateAndStart()">MULAI MISI TEMBAK ▶️</button>
+        </div>
+
+        <!-- LAYAR 2: PERMAINAN -->
+        <div id="playScreen" class="screen">
+            <div class="hud">
+                <div>👤 <span id="hudPlayerName">Siswa</span></div>
+                <div id="babakBadge" class="babak-pill">Babak 1</div>
+                <div>Soal <span id="qNumber">1</span> / 10</div>
+                <div class="timer-box">⏳ <span id="timerText">15</span> dtk</div>
+                <div>⭐ Skor: <span id="scoreText">0</span></div>
+            </div>
+
+            <div class="question-area">
+                <div id="helperText" class="helper-line">🐢 Kiki: "Arahkan pistolmu ke papan jawaban yang tepat!"</div>
+                <div class="visual-card">
+                    <div id="visualScene" class="visual-scene">🐸</div>
+                    <div id="visualCaption" class="visual-caption">Katak Hijau</div>
+                </div>
+                <div id="caseText" class="case-text" style="display: none;"></div>
+            </div>
+
+            <div id="optionsContainer" class="options-grid-2"></div>
+        </div>
+
+        <!-- LAYAR 3: AKHIR, SKOR & PERINGKAT HARIAN -->
+        <div id="endScreen" class="screen">
+            <div style="font-size: 4.5rem;">🏆🌿🎉</div>
+            <h1>Misi Rimba Selesai!</h1>
+            <p id="appreciationMsg" style="font-size: 1.25rem; font-weight: 800; color: #1B5E20; max-width: 680px;"></p>
+
+            <div class="stats-row">
+                <div class="stat-box">
+                    <div class="stat-label">Skor Akhir</div>
+                    <div class="stat-val"><span id="finalScore">0</span> / 100</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total Waktu</div>
+                    <div class="stat-val"><span id="totalTimeText">0</span> dtk</div>
+                </div>
+            </div>
+
+            <div class="leaderboard-box">
+                <div class="leaderboard-title">🏅 Peringkat &amp; Riwayat Harian (<span id="todayDateLabel"></span>)</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Peringkat</th>
+                            <th>Nama Siswa</th>
+                            <th>Skor</th>
+                            <th>Waktu (dtk)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+            </div>
+
+            <button class="btn-main" onclick="backToStart()">MAIN LAGI 🔄</button>
+        </div>
+    </div>
+
+    <!-- Widget Kamera Tangan / Wajah -->
+    <div class="camera-widget">
+        <video id="webcam" autoplay playsinline></video>
+        <div id="camStatus">Kamera mati (Mouse/Sentuh aktif)</div>
+        <div class="cam-btn-row">
+            <button id="btnHandCam" class="btn-cam" onclick="startHandCamera()">🖐️ Tangan</button>
+            <button id="btnFaceCam" class="btn-cam" style="background:#5E35B1; box-shadow:0 4px 0 #311B92;" onclick="startFaceCamera()">🙂 Wajah</button>
+            <button id="btnCamToggle" class="btn-cam" style="background:#C62828; box-shadow:0 4px 0 #8E0000;" onclick="toggleCameraPower()">⏹️ Off</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. DATA SOAL (BABAK 1: 1-5, BABAK 2: 6-10) ---
+        const stage1Questions = [
+            {
+                stage: 1,
+                timer: 15,
+                scene: "🐸",
+                caption: "Katak Hijau",
+                type: "biotik",
+                reason: "Katak adalah hewan (makhluk hidup) yang bernapas, tumbuh, dan melompat."
+            },
+            {
+                stage: 1,
+                timer: 15,
+                scene: "🌻",
+                caption: "Bunga Matahari",
+                type: "biotik",
+                reason: "Tumbuhan adalah makhluk hidup karena bisa tumbuh dan berkembang biak."
+            },
+            {
+                stage: 1,
+                timer: 15,
+                scene: "🪨",
+                caption: "Batu Sungai",
+                type: "abiotik",
+                reason: "Batu adalah benda tak hidup (komponen abiotik) yang tidak bernapas."
+            },
+            {
+                stage: 1,
+                timer: 15,
+                scene: "🦋",
+                caption: "Kupu-Kupu Hutan",
+                type: "biotik",
+                reason: "Kupu-kupu termasuk makhluk hidup yang terbang dan membutuhkan makanan."
+            },
+            {
+                stage: 1,
+                timer: 15,
+                scene: "☀️",
+                caption: "Cahaya Matahari",
+                type: "abiotik",
+                reason: "Cahaya matahari adalah komponen abiotik yang menerangi dan menghangatkan ekosistem."
+            }
+        ];
+
+        const stage2Questions = [
+            {
+                stage: 2,
+                timer: 20,
+                scene: "🥀🏜️",
+                caption: "Tepi Sungai Mengering",
+                casePrompt: "Tanaman di tepi sungai mulai layu karena kemarau panjang. Komponen abiotik apa yang harus Kiki tambah?",
+                options: [
+                    { id: "air", label: "🌊 Air" },
+                    { id: "batu", label: "🪨 Batu" },
+                    { id: "ikan", label: "🐟 Ikan" }
+                ],
+                correctId: "air",
+                reason: "Air sangat dibutuhkan tumbuhan yang layu agar segar kembali dan bertahan hidup."
+            },
+            {
+                stage: 2,
+                timer: 20,
+                scene: "🌱🌑",
+                caption: "Pojok Hutan Gelap",
+                casePrompt: "Bibit pohon di sudut hutan tumbuh lambat karena tertutup kanopi lebat. Komponen abiotik apa yang paling dibutuhkan agar berfotosintesis?",
+                options: [
+                    { id: "cahaya", label: "☀️ Cahaya Matahari" },
+                    { id: "pasir", label: "🏖️ Pasir" },
+                    { id: "rusa", label: "🦌 Rusa" }
+                ],
+                correctId: "cahaya",
+                reason: "Tumbuhan memerlukan cahaya matahari untuk membuat makanan sendiri."
+            },
+            {
+                stage: 2,
+                timer: 20,
+                scene: "🌾🐛",
+                caption: "Ladang Berulat",
+                casePrompt: "Ulat daun mulai merajalela di semak rimba. Hewan biotik apa yang bisa membantu mengendalikan jumlah ulat secara alami?",
+                options: [
+                    { id: "burung", label: "🐦 Burung Pemakan Serangga" },
+                    { id: "angin", label: "💨 Angin" },
+                    { id: "kerikil", label: "⚪ Kerikil" }
+                ],
+                correctId: "burung",
+                reason: "Burung membantu menjaga keseimbangan ekosistem dengan memangsa ulat."
+            },
+            {
+                stage: 2,
+                timer: 20,
+                scene: "🌿⛰️",
+                caption: "Lereng Gundul",
+                casePrompt: "Lereng bukit gundul rawan longsor saat hujan turun. Komponen biotik apa yang perlu ditanam Kiki untuk menahan tanah?",
+                options: [
+                    { id: "pohon", label: "🌳 Pohon" },
+                    { id: "awan", label: "☁️ Awan" },
+                    { id: "embun", label: "💧 Embun" }
+                ],
+                correctId: "pohon",
+                reason: "Akar pohon membantu mencengkeram tanah agar tidak mudah longsor."
+            },
+            {
+                stage: 2,
+                timer: 20,
+                scene: "🪵🍃",
+                caption: "Ranting & Daun Gugur",
+                casePrompt: "Daun-daun gugur menumpuk di dasar hutan. Makhluk hidup apa yang membantu menguraikannya menjadi zat hara bagi tanah?",
+                options: [
+                    { id: "jamur", label: "🍄 Jamur Pengurai" },
+                    { id: "batu_besar", label: "🪨 Batu Besar" },
+                    { id: "udara", label: "🌬️ Udara" }
+                ],
+                correctId: "jamur",
+                reason: "Jamur berperan sebagai pengurai yang mengembalikan nutrisi ke tanah."
+            }
+        ];
+
+        // --- 2. AUDIO, MUSIK LEMBUT & SUARA TEMBAKAN / PECAH (WEB AUDIO API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMusicOn = true;
+        let bgmTimer = null;
+        let noteStep = 0;
+        const softNotes = [523.25, 659.25, 783.99, 880.00, 783.99, 659.25, 587.33, 523.25];
+
+        function playSoftNote(freq) {
+            if (!isMusicOn || audioCtx.state === 'suspended') return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.032, now + 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.92);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.96);
+        }
+
+        function startBackgroundMusic() {
+            if (bgmTimer) clearInterval(bgmTimer);
+            bgmTimer = setInterval(() => {
+                if (!isMusicOn) return;
+                playSoftNote(softNotes[noteStep % softNotes.length]);
+                noteStep++;
+            }, 950);
+        }
+
+        function toggleMusic() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            isMusicOn = !isMusicOn;
+            document.getElementById('btnMusicToggle').innerText = isMusicOn ? "🎵 Musik: ON" : "🔇 Musik: OFF";
+            if (isMusicOn) playSoftNote(softNotes[noteStep % softNotes.length]);
+        }
+
+        function playGunshotSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+
+            const bufferSize = Math.floor(audioCtx.sampleRate * 0.14);
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) {
+                data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.28));
+            }
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = noiseBuffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1100, now);
+            filter.Q.setValueAtTime(0.8, now);
+
+            const nGain = audioCtx.createGain();
+            nGain.gain.setValueAtTime(0.28, now);
+            nGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+            noise.connect(filter);
+            filter.connect(nGain);
+            nGain.connect(audioCtx.destination);
+            noise.start(now);
+
+            const osc = audioCtx.createOscillator();
+            const oGain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(680, now);
+            osc.frequency.exponentialRampToValueAtTime(95, now + 0.13);
+            oGain.gain.setValueAtTime(0.14, now);
+            oGain.gain.exponentialRampToValueAtTime(0.001, now + 0.13);
+
+            osc.connect(oGain);
+            oGain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.14);
+        }
+
+        function playShatterAndResultSound(isCorrect) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+
+            for (let i = 0; i < 4; i++) {
+                const shardOsc = audioCtx.createOscillator();
+                const shardGain = audioCtx.createGain();
+                shardOsc.type = 'square';
+                const startF = 950 + i * 240 + Math.random() * 160;
+                shardOsc.frequency.setValueAtTime(startF, now + i * 0.03);
+                shardOsc.frequency.exponentialRampToValueAtTime(220, now + i * 0.03 + 0.08);
+                shardGain.gain.setValueAtTime(0.07, now + i * 0.03);
+                shardGain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.03 + 0.08);
+                shardOsc.connect(shardGain);
+                shardGain.connect(audioCtx.destination);
+                shardOsc.start(now + i * 0.03);
+                shardOsc.stop(now + i * 0.03 + 0.09);
+            }
+
+            const jingleOsc = audioCtx.createOscillator();
+            const jingleGain = audioCtx.createGain();
+            jingleOsc.connect(jingleGain);
+            jingleGain.connect(audioCtx.destination);
+
+            if (isCorrect) {
+                jingleOsc.type = 'triangle';
+                jingleOsc.frequency.setValueAtTime(523.25, now + 0.12);
+                jingleOsc.frequency.setValueAtTime(659.25, now + 0.22);
+                jingleOsc.frequency.setValueAtTime(783.99, now + 0.32);
+                jingleGain.gain.setValueAtTime(0.16, now + 0.12);
+                jingleOsc.start(now + 0.12);
+                jingleOsc.stop(now + 0.48);
+            } else {
+                jingleOsc.type = 'sawtooth';
+                jingleOsc.frequency.setValueAtTime(210, now + 0.12);
+                jingleOsc.frequency.setValueAtTime(160, now + 0.26);
+                jingleGain.gain.setValueAtTime(0.12, now + 0.12);
+                jingleOsc.start(now + 0.12);
+                jingleOsc.stop(now + 0.42);
+            }
+        }
+
+        // --- 3. MESIN EFEK TEMBAKAN 3D (CANVAS) & PECAHAN PAPAN ---
+        const fxCanvas = document.getElementById('fxCanvas');
+        const fxCtx = fxCanvas.getContext('2d');
+        let bullets3D = [];
+        let sparks3D = [];
+        let animFrameId = null;
+
+        function resizeFxCanvas() {
+            fxCanvas.width = window.innerWidth;
+            fxCanvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeFxCanvas);
+        resizeFxCanvas();
+
+        function getGunMuzzleScreenPos() {
+            const gun = document.getElementById('gunRig');
+            const rect = gun.getBoundingClientRect();
+            return {
+                x: rect.left + rect.width * 0.5,
+                y: rect.top + rect.height * 0.14
+            };
+        }
+
+        function triggerMuzzleFlash() {
+            const flash = document.getElementById('muzzleFlashGroup');
+            const gun = document.getElementById('gunRig');
+            flash.setAttribute('opacity', '1');
+            flash.setAttribute('transform', `translate(130, 10) rotate(${Math.floor(Math.random() * 45 - 22)}) scale(${(0.9 + Math.random() * 0.35).toFixed(2)}) translate(-130, -10)`);
+
+            gun.classList.remove('recoil');
+            void gun.offsetWidth;
+            gun.classList.add('recoil');
+
+            setTimeout(() => {
+                flash.setAttribute('opacity', '0');
+                gun.classList.remove('recoil');
+            }, 95);
+        }
+
+        function spawn3DBulletToPoint(targetX, targetY, onImpact) {
+            const muzzle = getGunMuzzleScreenPos();
+            playGunshotSound();
+            triggerMuzzleFlash();
+
+            bullets3D.push({
+                startX: muzzle.x,
+                startY: muzzle.y,
+                targetX,
+                targetY,
+                t: 0,
+                speed: 0.14,
+                onImpact
+            });
+
+            if (!animFrameId) {
+                render3DFxLoop();
+            }
+        }
+
+        function spawnImpactSparks3D(x, y, colorMain = '#FFD600') {
+            for (let i = 0; i < 22; i++) {
+                const angle = (Math.PI * 2 * i) / 22 + (Math.random() - 0.5) * 0.3;
+                const spd = 3 + Math.random() * 8;
+                sparks3D.push({
+                    x,
+                    y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd - 1.5,
+                    size: 4 + Math.random() * 6,
+                    alpha: 1,
+                    color: i % 2 === 0 ? colorMain : '#FF5722'
+                });
+            }
+            if (!animFrameId) {
+                render3DFxLoop();
+            }
+        }
+
+        function render3DFxLoop() {
+            fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+
+            for (let i = bullets3D.length - 1; i >= 0; i--) {
+                const b = bullets3D[i];
+                b.t += b.speed;
+                const prog = Math.min(1, b.t);
+                const eased = 1 - Math.pow(1 - prog, 2);
+
+                const curX = b.startX + (b.targetX - b.startX) * eased;
+                const curY = b.startY + (b.targetY - b.startY) * eased;
+                const depthScale = 1.45 - eased * 0.72;
+
+                const tailX = b.startX + (b.targetX - b.startX) * Math.max(0, eased - 0.22);
+                const tailY = b.startY + (b.targetY - b.startY) * Math.max(0, eased - 0.22);
+
+                const grad = fxCtx.createLinearGradient(tailX, tailY, curX, curY);
+                grad.addColorStop(0, 'rgba(255, 214, 0, 0)');
+                grad.addColorStop(0.6, 'rgba(255, 145, 0, 0.55)');
+                grad.addColorStop(1, 'rgba(255, 255, 255, 0.95)');
+
+                fxCtx.beginPath();
+                fxCtx.moveTo(tailX, tailY);
+                fxCtx.lineTo(curX, curY);
+                fxCtx.strokeStyle = grad;
+                fxCtx.lineWidth = 7 * depthScale;
+                fxCtx.lineCap = 'round';
+                fxCtx.stroke();
+
+                fxCtx.save();
+                fxCtx.translate(curX, curY);
+                fxCtx.scale(depthScale, depthScale);
+                fxCtx.beginPath();
+                fxCtx.arc(0, 0, 9, 0, Math.PI * 2);
+                fxCtx.fillStyle = '#FFF176';
+                fxCtx.fill();
+                fxCtx.lineWidth = 3;
+                fxCtx.strokeStyle = '#FF3D00';
+                fxCtx.stroke();
+                fxCtx.restore();
+
+                if (prog >= 1) {
+                    const cb = b.onImpact;
+                    bullets3D.splice(i, 1);
+                    if (typeof cb === 'function') cb();
+                }
+            }
+
+            for (let j = sparks3D.length - 1; j >= 0; j--) {
+                const s = sparks3D[j];
+                s.x += s.vx;
+                s.y += s.vy;
+                s.vy += 0.28;
+                s.alpha -= 0.032;
+
+                if (s.alpha <= 0) {
+                    sparks3D.splice(j, 1);
+                    continue;
+                }
+
+                fxCtx.save();
+                fxCtx.globalAlpha = Math.max(0, s.alpha);
+                fxCtx.fillStyle = s.color;
+                fxCtx.beginPath();
+                fxCtx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+                fxCtx.fill();
+                fxCtx.restore();
+            }
+
+            if (bullets3D.length > 0 || sparks3D.length > 0) {
+                animFrameId = requestAnimationFrame(render3DFxLoop);
+            } else {
+                fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+                animFrameId = null;
+            }
+        }
+
+        function shatterBoardElement(boardEl, hitX, hitY) {
+            const rect = boardEl.getBoundingClientRect();
+            const computedBg = window.getComputedStyle(boardEl).backgroundColor || '#1B5E20';
+            boardEl.classList.add('shatter-hit');
+
+            const cols = 4;
+            const rows = 3;
+            const shardW = rect.width / cols;
+            const shardH = rect.height / rows;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cx = rect.left + shardW * (c + 0.5);
+                    const cy = rect.top + shardH * (r + 0.5);
+
+                    const dxFromHit = cx - (hitX || cx);
+                    const dyFromHit = cy - (hitY || cy);
+                    const tx = dxFromHit * 1.45 + (Math.random() - 0.5) * 140;
+                    const ty = dyFromHit * 1.15 + 90 + Math.random() * 140;
+                    const rot = `${Math.floor((Math.random() - 0.5) * 140)}deg`;
+
+                    const shard = document.createElement('div');
+                    shard.className = 'shard-piece';
+                    shard.style.left = `${cx}px`;
+                    shard.style.top = `${cy}px`;
+                    shard.style.width = `${Math.max(24, shardW * 0.92)}px`;
+                    shard.style.height = `${Math.max(22, shardH * 0.92)}px`;
+                    shard.style.background = computedBg;
+                    shard.style.setProperty('--tx', `${tx}px`);
+                    shard.style.setProperty('--ty', `${ty}px`);
+                    shard.style.setProperty('--rot', rot);
+
+                    document.body.appendChild(shard);
+                    setTimeout(() => shard.remove(), 760);
+                }
+            }
+        }
+
+        // --- 4. STATE PERMAINAN ---
+        let playerName = "";
+        let sessionQuestions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let timeLeft = 15;
+        let totalElapsedSeconds = 0;
+        let timerInterval = null;
+        let isLocked = false;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            const gun = document.getElementById('gunRig');
+            const reticle = document.getElementById('aimReticle');
+            if (id === 'playScreen') {
+                gun.style.display = 'block';
+            } else {
+                gun.style.display = 'none';
+                reticle.style.display = 'none';
+            }
+        }
+
+        function validateAndStart() {
+            const input = document.getElementById('studentNameInput');
+            const errEl = document.getElementById('nameError');
+            const cleanName = input.value.trim();
+
+            if (!cleanName) {
+                errEl.innerText = "Nama siswa wajib diisi sebelum mulai bermain ya!";
+                input.focus();
+                return;
+            }
+
+            errEl.innerText = "";
+            playerName = cleanName;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            startBackgroundMusic();
+            beginGameSession();
+        }
+
+        function beginGameSession() {
+            const s1 = [...stage1Questions].sort(() => Math.random() - 0.5);
+            const s2 = [...stage2Questions].sort(() => Math.random() - 0.5);
+            sessionQuestions = [...s1, ...s2];
+
+            currentIdx = 0;
+            score = 0;
+            totalElapsedSeconds = 0;
+            isLocked = false;
+
+            document.getElementById('hudPlayerName').innerText = playerName;
+            document.getElementById('scoreText').innerText = score;
+            showScreen('playScreen');
+            loadQuestion();
+        }
+
+        function renderOptionsForQuestion(q) {
+            const container = document.getElementById('optionsContainer');
+            resetAimLock();
+            container.innerHTML = "";
+
+            if (q.stage === 1) {
+                container.className = "options-grid-2";
+                const choices = [
+                    { id: "biotik", title: "BIOTIK", sub: "Makhluk Hidup", cls: "opt-biotik" },
+                    { id: "abiotik", title: "ABIOTIK", sub: "Benda Tak Hidup", cls: "opt-abiotik" }
+                ];
+
+                choices.forEach(c => {
+                    const slot = document.createElement('div');
+                    slot.className = "target-slot";
+
+                    const board = document.createElement('div');
+                    board.className = `option-board ${c.cls} aim-target`;
+                    board.dataset.answer = c.id;
+                    board.onclick = (e) => {
+                        const rect = board.getBoundingClientRect();
+                        const hx = e.clientX || (rect.left + rect.width * 0.5);
+                        const hy = e.clientY || (rect.top + rect.height * 0.5);
+                        updateAimPosition(hx, hy, false);
+                        shootBoard(board, c.id, hx, hy);
+                    };
+                    board.innerHTML = `
+                        <span class="board-rivet rivet-tl"></span>
+                        <span class="board-rivet rivet-tr"></span>
+                        <span class="board-rivet rivet-bl"></span>
+                        <span class="board-rivet rivet-br"></span>
+                        <div class="opt-title">${c.title}</div>
+                        <div class="opt-sub">${c.sub}</div>
+                    `;
+                    slot.appendChild(board);
+                    container.appendChild(slot);
+                });
+            } else {
+                container.className = "options-grid-3";
+                const shuffledOpts = [...q.options].sort(() => Math.random() - 0.5);
+                shuffledOpts.forEach((opt) => {
+                    const slot = document.createElement('div');
+                    slot.className = "target-slot";
+
+                    const board = document.createElement('div');
+                    board.className = "option-board opt-case aim-target";
+                    board.dataset.answer = opt.id;
+                    board.onclick = (e) => {
+                        const rect = board.getBoundingClientRect();
+                        const hx = e.clientX || (rect.left + rect.width * 0.5);
+                        const hy = e.clientY || (rect.top + rect.height * 0.5);
+                        updateAimPosition(hx, hy, false);
+                        shootBoard(board, opt.id, hx, hy);
+                    };
+                    board.innerHTML = `
+                        <span class="board-rivet rivet-tl"></span>
+                        <span class="board-rivet rivet-tr"></span>
+                        <span class="board-rivet rivet-bl"></span>
+                        <span class="board-rivet rivet-br"></span>
+                        <div class="opt-title" style="font-size: 1.65rem;">${opt.label}</div>
+                    `;
+                    slot.appendChild(board);
+                    container.appendChild(slot);
+                });
+            }
+        }
+
+        function loadQuestion() {
+            if (currentIdx >= sessionQuestions.length) {
+                finishGame();
+                return;
+            }
+
+            isLocked = false;
+            const q = sessionQuestions[currentIdx];
+
+            document.getElementById('qNumber').innerText = currentIdx + 1;
+            document.getElementById('babakBadge').innerText = q.stage === 1 ? "Babak 1: Biotik vs Abiotik" : "Babak 2: Komponen Ekosistem";
+            document.getElementById('visualScene').innerText = q.scene;
+            document.getElementById('visualCaption').innerText = q.caption;
+
+            const caseEl = document.getElementById('caseText');
+            const helperEl = document.getElementById('helperText');
+            if (q.stage === 2) {
+                helperEl.innerText = "🐢 Kiki: Bidik papan lalu tunjuk 🫵🏻 / buka mulut / klik untuk menembak!";
+                caseEl.style.display = "block";
+                caseEl.innerText = q.casePrompt;
+            } else {
+                helperEl.innerText = "🐢 Kiki: Bidik BIOTIK atau ABIOTIK lalu tunjuk 🫵🏻 / buka mulut / klik!";
+                caseEl.style.display = "none";
+                caseEl.innerText = "";
+            }
+
+            renderOptionsForQuestion(q);
+
+            clearInterval(timerInterval);
+            timeLeft = q.timer;
+            document.getElementById('timerText').innerText = timeLeft;
+
+            timerInterval = setInterval(() => {
+                if (isLocked) return;
+                timeLeft--;
+                totalElapsedSeconds++;
+                document.getElementById('timerText').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    handleAnswer('timeout');
+                }
+            }, 1000);
+        }
+
+        function shootBoard(boardEl, selectedId, hitX, hitY) {
+            if (isLocked) return;
+            isLocked = true;
+            clearInterval(timerInterval);
+            resetAimLock();
+
+            const rect = boardEl.getBoundingClientRect();
+            const targetX = typeof hitX === 'number' ? hitX : rect.left + rect.width * 0.5;
+            const targetY = typeof hitY === 'number' ? hitY : rect.top + rect.height * 0.5;
+
+            spawn3DBulletToPoint(targetX, targetY, () => {
+                spawnImpactSparks3D(targetX, targetY, '#FFD600');
+                shatterBoardElement(boardEl, targetX, targetY);
+
+                setTimeout(() => {
+                    handleAnswer(selectedId);
+                }, 380);
+            });
+        }
+
+        function handleAnswer(selectedId) {
+            isLocked = true;
+            clearInterval(timerInterval);
+
+            const q = sessionQuestions[currentIdx];
+            const expectedId = q.stage === 1 ? q.type : q.correctId;
+            const isCorrect = selectedId === expectedId;
+
+            const banner = document.getElementById('feedbackBanner');
+            const fbIcon = document.getElementById('fbIcon');
+            const fbTitle = document.getElementById('fbTitle');
+            const fbReason = document.getElementById('fbReason');
+
+            if (isCorrect) {
+                score += 10;
+                document.getElementById('scoreText').innerText = score;
+                playShatterAndResultSound(true);
+                fbIcon.innerText = "💥🌟";
+                fbTitle.innerText = "KENA SASARAN! BENAR!";
+                fbTitle.style.color = "#2E7D32";
+                banner.style.borderColor = "#4CAF50";
+            } else if (selectedId === 'timeout') {
+                playShatterAndResultSound(false);
+                fbIcon.innerText = "⏰🐢";
+                fbTitle.innerText = "Waktu Habis!";
+                fbTitle.style.color = "#E65100";
+                banner.style.borderColor = "#FF9800";
+            } else {
+                playShatterAndResultSound(false);
+                fbIcon.innerText = "💥💡";
+                fbTitle.innerText = "Papan Pecah! Ayo Ingat Lagi!";
+                fbTitle.style.color = "#D84315";
+                banner.style.borderColor = "#FF7043";
+            }
+
+            fbReason.innerText = q.reason;
+            banner.classList.add('show');
+
+            setTimeout(() => {
+                banner.classList.remove('show');
+                currentIdx++;
+                loadQuestion();
+            }, 2450);
+        }
+
+        // --- 5. LEADERBOARD HARIAN (LOCALSTORAGE) ---
+        function getTodayKey() {
+            const now = new Date();
+            const y = now.getFullYear();
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const d = String(now.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function formatTodayDisplay() {
+            return new Date().toLocaleDateString('id-ID', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        function saveDailyResult(name, finalScore, elapsedSec) {
+            const storageKey = `rimba_ceria_leaderboard_${getTodayKey()}`;
+            let entries = [];
+            try {
+                entries = JSON.parse(localStorage.getItem(storageKey)) || [];
+            } catch (_) {
+                entries = [];
+            }
+
+            const newRecord = {
+                id: `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+                name,
+                score: finalScore,
+                time: elapsedSec
+            };
+
+            entries.push(newRecord);
+            entries.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return a.time - b.time;
+            });
+
+            localStorage.setItem(storageKey, JSON.stringify(entries));
+            return { entries, currentId: newRecord.id };
+        }
+
+        function finishGame() {
+            clearInterval(timerInterval);
+            showScreen('endScreen');
+
+            document.getElementById('finalScore').innerText = score;
+            document.getElementById('totalTimeText').innerText = totalElapsedSeconds;
+            document.getElementById('todayDateLabel').innerText = formatTodayDisplay();
+
+            const msgEl = document.getElementById('appreciationMsg');
+            if (score >= 80) {
+                msgEl.innerText = `Selamat, ${playerName}! Bidikanmu tepat sekali menjaga rimba dan memahami biotik serta abiotik!`;
+            } else if (score >= 50) {
+                msgEl.innerText = `Bagus sekali, ${playerName}! Terus berlatih menembak sasaran ekosistem yang tepat ya!`;
+            } else {
+                msgEl.innerText = `Semangat, ${playerName}! Setiap tembakan melatih ketelitianmu—ayo coba lagi!`;
+            }
+
+            const { entries, currentId } = saveDailyResult(playerName, score, totalElapsedSeconds);
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = "";
+
+            entries.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                if (item.id === currentId) tr.className = "highlight-row";
+                const medal = idx === 0 ? "🥇 " : idx === 1 ? "🥈 " : idx === 2 ? "🥉 " : "";
+                tr.innerHTML = `
+                    <td>${medal}#${idx + 1}</td>
+                    <td>${escapeHtml(item.name)}</td>
+                    <td>${item.score}</td>
+                    <td>${item.time}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        function backToStart() {
+            document.getElementById('studentNameInput').value = "";
+            document.getElementById('nameError').innerText = "";
+            showScreen('startScreen');
+        }
+
+        // --- 6. PENGARAHAN PISTOL & BIDIKAN (TANPA FITUR TAHAN OTOMATIS) ---
+        let lockedBoard = null;
+        let lastTriggerTime = 0;
+
+        function resetAimLock() {
+            if (lockedBoard) {
+                lockedBoard.classList.remove('locked-on');
+            }
+            document.querySelectorAll('.option-board.locked-on').forEach(c => c.classList.remove('locked-on'));
+            document.getElementById('aimReticle').classList.remove('on-target');
+            lockedBoard = null;
+        }
+
+        function orientGunToward(targetX) {
+            const gun = document.getElementById('gunRig');
+            if (!document.getElementById('playScreen').classList.contains('active')) return;
+
+            const normX = (targetX / Math.max(1, window.innerWidth)) * 2 - 1;
+            const offsetX = Math.round(normX * 140);
+            const angleDeg = Math.max(-24, Math.min(24, normX * 20));
+
+            gun.style.setProperty('--gun-offset-x', `${offsetX}px`);
+            gun.style.setProperty('--gun-angle', `${angleDeg}deg`);
+            gun.style.transform = `translateX(calc(-50% + ${offsetX}px)) rotate(${angleDeg}deg)`;
+        }
+
+        function updateAimPosition(screenX, screenY, triggerFired = false) {
+            const playActive = document.getElementById('playScreen').classList.contains('active');
+            const reticle = document.getElementById('aimReticle');
+
+            if (!playActive) {
+                reticle.style.display = 'none';
+                resetAimLock();
+                return;
+            }
+
+            reticle.style.display = 'block';
+            reticle.style.left = `${screenX}px`;
+            reticle.style.top = `${screenY}px`;
+            orientGunToward(screenX);
+
+            if (isLocked) {
+                resetAimLock();
+                return;
+            }
+
+            const boards = Array.from(document.querySelectorAll('#optionsContainer .aim-target'));
+            let matchedBoard = null;
+
+            for (const b of boards) {
+                const r = b.getBoundingClientRect();
+                if (screenX >= r.left && screenX <= r.right && screenY >= r.top && screenY <= r.bottom) {
+                    matchedBoard = b;
+                    break;
+                }
+            }
+
+            if (matchedBoard !== lockedBoard) {
+                resetAimLock();
+                lockedBoard = matchedBoard;
+                if (lockedBoard) {
+                    lockedBoard.classList.add('locked-on');
+                    reticle.classList.add('on-target');
+                }
+            }
+
+            if (lockedBoard && triggerFired) {
+                const now = performance.now();
+                if (now - lastTriggerTime > 500) {
+                    lastTriggerTime = now;
+                    const ans = lockedBoard.dataset.answer;
+                    shootBoard(lockedBoard, ans, screenX, screenY);
+                }
+            }
+        }
+
+        // Kontrol alternatif: geser mouse atau geser layar
+        window.addEventListener('mousemove', (e) => {
+            if (!document.getElementById('playScreen').classList.contains('active')) return;
+            updateAimPosition(e.clientX, e.clientY, false);
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (!document.getElementById('playScreen').classList.contains('active')) return;
+            if (e.touches && e.touches.length > 0) {
+                updateAimPosition(e.touches[0].clientX, e.touches[0].clientY, false);
+            }
+        }, { passive: true });
+
+        window.addEventListener('touchstart', (e) => {
+            if (!document.getElementById('playScreen').classList.contains('active')) return;
+            if (e.touches && e.touches.length > 0) {
+                updateAimPosition(e.touches[0].clientX, e.touches[0].clientY, false);
+            }
+        }, { passive: true });
+
+        // --- 7. KAMERA DETEKSI GERAKAN TANGAN (TELAPAK BIDIK + MENUNJUK TEMBAK) & WAJAH (KEPALA BIDIK + BUKA MULUT TEMBAK) ---
+        let activeCamStream = null;
+        let activeFrameLoopId = null;
+        let camMode = 'none';
+        let lastCamMode = 'hand';
+        let isCameraStarting = false;
+
+        function updateCamToggleButton() {
+            const btn = document.getElementById('btnCamToggle');
+            if (!btn) return;
+            const isOn = camMode !== 'none' || Boolean(activeCamStream);
+            if (isOn) {
+                btn.innerText = "⏹️ Off";
+                btn.style.background = "#C62828";
+                btn.style.boxShadow = "0 4px 0 #8E0000";
+            } else {
+                btn.innerText = "▶️ On";
+                btn.style.background = "#2E7D32";
+                btn.style.boxShadow = "0 4px 0 #1B5E20";
+            }
+        }
+
+        function stopCurrentCamera() {
+            if (camMode === 'hand' || camMode === 'face') {
+                lastCamMode = camMode;
+            }
+            camMode = 'none';
+            isCameraStarting = false;
+            if (activeFrameLoopId) {
+                cancelAnimationFrame(activeFrameLoopId);
+                activeFrameLoopId = null;
+            }
+            if (activeCamStream) {
+                activeCamStream.getTracks().forEach(t => {
+                    t.onended = null;
+                    t.stop();
+                });
+                activeCamStream = null;
+            }
+            const videoEl = document.getElementById('webcam');
+            if (videoEl) {
+                videoEl.pause();
+                videoEl.srcObject = null;
+                videoEl.style.display = 'none';
+            }
+            document.getElementById('aimReticle').style.display = 'none';
+            resetAimLock();
+            updateCamToggleButton();
+        }
+
+        function turnOffCamera() {
+            stopCurrentCamera();
+            document.getElementById('camStatus').innerText = "Kamera mati (Mouse/Sentuh aktif)";
+        }
+
+        function toggleCameraPower() {
+            const isOn = camMode !== 'none' || Boolean(activeCamStream) || isCameraStarting;
+            if (isOn) {
+                turnOffCamera();
+            } else {
+                if (lastCamMode === 'face') {
+                    startFaceCamera();
+                } else {
+                    startHandCamera();
+                }
+            }
+        }
+
+        async function openWebcamStream(videoEl, statusEl) {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusEl.innerText = "Browser tidak mendukung kamera. Pakai Mouse/Layar.";
+                return false;
+            }
+            stopCurrentCamera();
+            activeCamStream = await navigator.mediaDevices.getUserMedia({
+                video: { width: 320, height: 240, facingMode: "user" },
+                audio: false
+            });
+            activeCamStream.getTracks().forEach(track => {
+                track.onended = () => {
+                    if (camMode !== 'none' || activeCamStream) {
+                        turnOffCamera();
+                    }
+                };
+            });
+            videoEl.srcObject = activeCamStream;
+            videoEl.style.display = 'block';
+            await videoEl.play();
+            return true;
+        }
+
+        function isPointingGesture(lm) {
+            const indexExtended = Math.hypot(lm[8].x - lm[0].x, lm[8].y - lm[0].y) >
+                                  Math.hypot(lm[6].x - lm[0].x, lm[6].y - lm[0].y) * 1.12;
+            const middleCurled = Math.hypot(lm[12].x - lm[0].x, lm[12].y - lm[0].y) <
+                                 Math.hypot(lm[10].x - lm[0].x, lm[10].y - lm[0].y) * 1.04;
+            const ringCurled = Math.hypot(lm[16].x - lm[0].x, lm[16].y - lm[0].y) <
+                               Math.hypot(lm[14].x - lm[0].x, lm[14].y - lm[0].y) * 1.04;
+            const pinkyCurled = Math.hypot(lm[20].x - lm[0].x, lm[20].y - lm[0].y) <
+                                Math.hypot(lm[18].x - lm[0].x, lm[18].y - lm[0].y) * 1.04;
+
+            return indexExtended && middleCurled && ringCurled && pinkyCurled;
+        }
+
+        async function startHandCamera() {
+            const statusEl = document.getElementById('camStatus');
+            const videoEl = document.getElementById('webcam');
+            isCameraStarting = true;
+
+            if (typeof Hands === 'undefined') {
+                statusEl.innerText = "MediaPipe Hands gagal dimuat. Pakai Mouse/Layar.";
+                return;
+            }
+
+            try {
+                statusEl.innerText = "Mengaktifkan kamera tangan...";
+                const ok = await openWebcamStream(videoEl, statusEl);
+                if (!ok) return;
+
+                camMode = 'hand';
+                lastCamMode = 'hand';
+                isCameraStarting = false;
+                updateCamToggleButton();
+                const hands = new Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.65,
+                    minTrackingConfidence: 0.6
+                });
+
+                hands.onResults((results) => {
+                    if (camMode !== 'hand') return;
+                    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                        const lm = results.multiHandLandmarks[0];
+                        const palmAim = lm[9];
+                        const sx = (1 - palmAim.x) * window.innerWidth;
+                        const sy = palmAim.y * window.innerHeight;
+
+                        const pointing = isPointingGesture(lm);
+                        statusEl.innerText = pointing ? "🫵🏻 Menunjuk = TEMBAK!" : "🖐️ Arahkan telapak tangan";
+                        updateAimPosition(sx, sy, pointing);
+                    } else {
+                        statusEl.innerText = "Arahkan telapak tangan ke kamera";
+                        resetAimLock();
+                    }
+                });
+
+                const pumpHand = async () => {
+                    if (camMode !== 'hand' || !activeCamStream) return;
+                    if (videoEl.readyState >= 2) {
+                        await hands.send({ image: videoEl });
+                    }
+                    activeFrameLoopId = requestAnimationFrame(pumpHand);
+                };
+                statusEl.innerText = "Kamera Tangan aktif! Telapak bidik, tunjuk 🫵🏻 tembak";
+                activeFrameLoopId = requestAnimationFrame(pumpHand);
+            } catch (_) {
+                isCameraStarting = false;
+                camMode = 'none';
+                updateCamToggleButton();
+                statusEl.innerText = "Kamera gagal/ditolak. Pakai Mouse/Layar ya!";
+            }
+        }
+
+        async function startFaceCamera() {
+            const statusEl = document.getElementById('camStatus');
+            const videoEl = document.getElementById('webcam');
+            isCameraStarting = true;
+
+            if (typeof FaceMesh === 'undefined') {
+                statusEl.innerText = "MediaPipe Wajah gagal dimuat. Pakai Mouse/Layar.";
+                return;
+            }
+
+            try {
+                statusEl.innerText = "Mengaktifkan kamera wajah...";
+                const ok = await openWebcamStream(videoEl, statusEl);
+                if (!ok) return;
+
+                camMode = 'face';
+                lastCamMode = 'face';
+                isCameraStarting = false;
+                updateCamToggleButton();
+                const faceMesh = new FaceMesh({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+                });
+                faceMesh.setOptions({
+                    maxNumFaces: 1,
+                    refineLandmarks: true,
+                    minDetectionConfidence: 0.6,
+                    minTrackingConfidence: 0.6
+                });
+
+                faceMesh.onResults((results) => {
+                    if (camMode !== 'face') return;
+                    if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                        const lm = results.multiFaceLandmarks[0];
+                        const headAim = lm[1];
+                        const upperLip = lm[13];
+                        const lowerLip = lm[14];
+
+                        const sx = (1 - headAim.x) * window.innerWidth;
+                        const sy = headAim.y * window.innerHeight;
+                        const mouthGap = Math.hypot(upperLip.x - lowerLip.x, upperLip.y - lowerLip.y);
+                        const mouthOpenFire = mouthGap > 0.045;
+
+                        statusEl.innerText = mouthOpenFire ? "😮 Buka mulut = TEMBAK!" : "🙂 Gerakkan kepala membidik";
+                        updateAimPosition(sx, sy, mouthOpenFire);
+                    } else {
+                        statusEl.innerText = "Arahkan wajah ke kamera";
+                        resetAimLock();
+                    }
+                });
+
+                const pumpFace = async () => {
+                    if (camMode !== 'face' || !activeCamStream) return;
+                    if (videoEl.readyState >= 2) {
+                        await faceMesh.send({ image: videoEl });
+                    }
+                    activeFrameLoopId = requestAnimationFrame(pumpFace);
+                };
+                statusEl.innerText = "Kamera Wajah aktif! Kepala bidik, buka mulut tembak";
+                activeFrameLoopId = requestAnimationFrame(pumpFace);
+            } catch (_) {
+                isCameraStarting = false;
+                camMode = 'none';
+                updateCamToggleButton();
+                statusEl.innerText = "Kamera wajah gagal/ditolak. Pakai Mouse/Layar ya!";
+            }
+        }
+    </script>
+</body>
+</html>
